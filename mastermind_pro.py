@@ -6,7 +6,7 @@ import random
 pygame.init()
 
 # Fenstergröße und Titel
-screen_size = (800, 600)
+screen_size = (1200, 800)
 screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption('Mastermind Pro')
 
@@ -35,13 +35,15 @@ def handle_circle_click(pos, circles):
             return i
     return None
 
-def feedback_color(black_pegs, white_pegs, index):
-    if index < black_pegs:
-        return GREEN
-    elif index < black_pegs + white_pegs:
-        return LIGHT_GREEN
-    else:
-        return WHITE
+def draw_dropdown_menu(screen, x, y, options):
+    menu_width, menu_height = 60, len(options) * 30
+    pygame.draw.rect(screen, BLACK, (x, y, menu_width, menu_height), 2)
+    for i, option in enumerate(options):
+        color, number = option
+        pygame.draw.circle(screen, COLORS[color], (x + 15, y + 15 + i * 30), 10)
+        font = pygame.font.Font(None, 24)
+        text = font.render(str(number), True, BLACK)
+        screen.blit(text, (x + 30, y + 10 + i * 30))
 
 # Hauptspiel-Schleife
 def main():
@@ -51,9 +53,12 @@ def main():
     current_guess = [None] * 5
     selected_circle = None
     check_button_active = False
+    dropdown_active = False
+    dropdown_position = (0, 0)
     
     # Kreise für die Benutzereingabe
-    input_circles = [{'x': 100 + i * 60, 'y': 300, 'radius': 20, 'color': WHITE, 'number': None} for i in range(5)]
+    input_circles = [{'x': 100 + i * 100, 'y': 300, 'radius': 30, 'color': WHITE, 'number': None} for i in range(5)]
+    dropdown_options = [(color, num) for color in COLORS.keys() for num in range(1, 9)]
     
     running = True
     while running:
@@ -62,54 +67,63 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                clicked_circle_index = handle_circle_click(pos, input_circles)
-                if clicked_circle_index is not None:
-                    print(f'Clicked on circle {clicked_circle_index}')
-                    selected_circle = clicked_circle_index
-                    # Simulate dropdown selection for simplicity
-                    selected_color = random.choice(list(COLORS.keys()))  # Replace with actual dropdown logic
-                    selected_number = random.randint(1, 8)  # Replace with actual dropdown logic
-                    input_circles[clicked_circle_index]['color'] = COLORS[selected_color]
-                    input_circles[clicked_circle_index]['number'] = selected_number
-                    current_guess[clicked_circle_index] = (selected_color, selected_number)
-                    if None not in current_guess:
-                        check_button_active = True
-                        print('All circles filled, check button active')
-            elif event.type == pygame.MOUSEBUTTONDOWN and check_button_active:
-                pos = pygame.mouse.get_pos()
-                if 350 <= pos[0] <= 450 and 400 <= pos[1] <= 450:
-                    black_pegs, white_pegs = check_guess(current_guess, secret_code)
-                    attempts.append((current_guess.copy(), black_pegs, white_pegs))
-                    current_guess = [None] * 5
-                    input_circles = [{'x': 100 + i * 60, 'y': 300, 'radius': 20, 'color': WHITE, 'number': None} for i in range(5)]
-                    check_button_active = False
-                    print(f'Checked guess: {black_pegs} black pegs, {white_pegs} white pegs')
-                    if black_pegs == 5:
-                        print("Congratulations! You've cracked the code!")
-                        running = False
+                if dropdown_active:
+                    # Überprüfung, ob eine Auswahl im Dropdown getroffen wurde
+                    dropdown_x, dropdown_y = dropdown_position
+                    if dropdown_x <= pos[0] <= dropdown_x + 60 and dropdown_y <= pos[1] <= dropdown_y + len(dropdown_options) * 30:
+                        selected_option_index = (pos[1] - dropdown_y) // 30
+                        selected_color, selected_number = dropdown_options[selected_option_index]
+                        input_circles[selected_circle]['color'] = COLORS[selected_color]
+                        input_circles[selected_circle]['number'] = selected_number
+                        current_guess[selected_circle] = (selected_color, selected_number)
+                        dropdown_active = False
+                        if None not in current_guess:
+                            check_button_active = True
+                            print('All circles filled, check button active')
+                else:
+                    clicked_circle_index = handle_circle_click(pos, input_circles)
+                    if clicked_circle_index is not None:
+                        selected_circle = clicked_circle_index
+                        dropdown_position = (input_circles[clicked_circle_index]['x'], input_circles[clicked_circle_index]['y'] + 40)
+                        dropdown_active = True
+                    elif check_button_active and 350 <= pos[0] <= 450 and 500 <= pos[1] <= 550:
+                        black_pegs, white_pegs = check_guess(current_guess, secret_code)
+                        attempts.append((current_guess.copy(), black_pegs, white_pegs))
+                        current_guess = [None] * 5
+                        input_circles = [{'x': 100 + i * 100, 'y': 300, 'radius': 30, 'color': WHITE, 'number': None} for i in range(5)]
+                        check_button_active = False
+                        print(f'Checked guess: {black_pegs} black pegs, {white_pegs} white pegs')
+                        if black_pegs == 5:
+                            print("Congratulations! You've cracked the code!")
+                            running = False
         
         # Bildschirm löschen
         screen.fill(WHITE)
         
         # Eingabekreise zeichnen
-        for circle in input_circles:
+        for i, circle in enumerate(input_circles):
+            pygame.draw.circle(screen, BLACK, (circle['x'], circle['y']), circle['radius'] + 2)  # Schwarze Umrandung
             pygame.draw.circle(screen, circle['color'], (circle['x'], circle['y']), circle['radius'])
             if circle['number'] is not None:
                 font = pygame.font.Font(None, 24)
                 text = font.render(str(circle['number']), True, BLACK)
                 screen.blit(text, (circle['x'] - 10, circle['y'] + 30))
         
+        # Dropdown-Menü zeichnen
+        if dropdown_active:
+            draw_dropdown_menu(screen, dropdown_position[0], dropdown_position[1], dropdown_options)
+        
         # Check-Button zeichnen
         if check_button_active:
-            pygame.draw.rect(screen, GREEN, (350, 400, 100, 50))
+            pygame.draw.rect(screen, GREEN, (350, 500, 100, 50))
             font = pygame.font.Font(None, 36)
             text = font.render("Check", True, BLACK)
-            screen.blit(text, (370, 410))
+            screen.blit(text, (370, 510))
         else:
-            pygame.draw.rect(screen, (200, 200, 200), (350, 400, 100, 50))
+            pygame.draw.rect(screen, (200, 200, 200), (350, 500, 100, 50))
             font = pygame.font.Font(None, 36)
             text = font.render("Check", True, BLACK)
-            screen.blit(text, (370, 410))
+            screen.blit(text, (370, 510))
         
         # Versuche anzeigen
         y_offset = 50
