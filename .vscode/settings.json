@@ -1,5 +1,28 @@
 {
     "cSpell.words": [
-        "pygame"
+        "pygame",
+        "Fenstergröße",
+        "Initialisierung",
+        "pygame",
+        "Titel",
+        "Versuche",
+        "Farben",
+        "Funktionen",
+        "Eingabeaufforderung",
+        "Hauptspiel",
+        "Eingabeverarbeitung",
+        "Schleife",
+        "initiale",
+        "Einstellungen",
+        "Kreise",
+        "Benutzereingabe",
+        "MOUSEBUTTONDOWN",
+        "Bildschirm",
+        "löschen",
+        "Eingabekreise",
+        "zeichnen",
+        "blit",
+        "anzeigen",
+        "aktualisieren"        
     ]
 }
