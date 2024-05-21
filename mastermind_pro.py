@@ -64,6 +64,7 @@ def main():
                 pos = pygame.mouse.get_pos()
                 clicked_circle_index = handle_circle_click(pos, input_circles)
                 if clicked_circle_index is not None:
+                    print(f'Clicked on circle {clicked_circle_index}')
                     selected_circle = clicked_circle_index
                     # Simulate dropdown selection for simplicity
                     selected_color = random.choice(list(COLORS.keys()))  # Replace with actual dropdown logic
@@ -73,6 +74,7 @@ def main():
                     current_guess[clicked_circle_index] = (selected_color, selected_number)
                     if None not in current_guess:
                         check_button_active = True
+                        print('All circles filled, check button active')
             elif event.type == pygame.MOUSEBUTTONDOWN and check_button_active:
                 pos = pygame.mouse.get_pos()
                 if 350 <= pos[0] <= 450 and 400 <= pos[1] <= 450:
@@ -81,6 +83,7 @@ def main():
                     current_guess = [None] * 5
                     input_circles = [{'x': 100 + i * 60, 'y': 300, 'radius': 20, 'color': WHITE, 'number': None} for i in range(5)]
                     check_button_active = False
+                    print(f'Checked guess: {black_pegs} black pegs, {white_pegs} white pegs')
                     if black_pegs == 5:
                         print("Congratulations! You've cracked the code!")
                         running = False
